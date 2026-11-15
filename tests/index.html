@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Hierro · Tests</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  body { font: 16px/1.4 -apple-system, system-ui, sans-serif; background: #000; color: #f5f5f7; margin: 0; padding: calc(env(safe-area-inset-top) + 20px) 18px 40px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; } h2 { font-size: 1rem; color: #a1a1a8; margin: 22px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+  #sum { font-weight: 700; font-size: 1.1rem; margin: 10px 0; }
+  .ok { color: #c6f432; } .fail { color: #ff5a4f; }
+  li { list-style: none; padding: 5px 0; border-bottom: 1px solid #222; } ul { padding: 0; margin: 0; }
+  small { display: block; color: #ff5a4f; } a { color: #c6f432; }
+</style>
+</head>
+<body>
+<h1>Tests de Hierro</h1>
+<p><a href="../">← Volver a la app</a></p>
+<div id="sum">Ejecutando…</div>
+<div id="out"></div>
+<script type="module">
+  import { runAll } from './tests.js';
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  let csv = null;
+  try { const r = await fetch('./workout_data.csv'); if (r.ok) csv = await r.text(); } catch {}
+  const res = await runAll(csv);
+  const fail = res.filter((r) => !r.ok).length;
+  const sum = document.getElementById('sum');
+  sum.textContent = fail ? `${fail} de ${res.length} tests han fallado` : `✓ Los ${res.length} tests pasan`;
+  sum.className = fail ? 'fail' : 'ok';
+  let html = '', g = '';
+  for (const r of res) {
+    if (r.group !== g) { if (g) html += '</ul>'; g = r.group; html += `<h2>${esc(g)}</h2><ul>`; }
+    html += `<li><span class="${r.ok ? 'ok' : 'fail'}">${r.ok ? '✓' : '✗'}</span> ${esc(r.name)}${r.ok ? '' : `<small>${esc(r.error)}</small>`}</li>`;
+  }
+  document.getElementById('out').innerHTML = html + '</ul>';
+  document.title = fail ? `✗ ${fail} fallos` : '✓ Tests OK';
+</script>
+</body>
+</html>
